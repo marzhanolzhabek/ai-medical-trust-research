@@ -1,0 +1,11 @@
+.git/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.DS_Store
+.env
+.env.*
+results/*.json
+*.log
