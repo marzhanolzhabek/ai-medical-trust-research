@@ -1,0 +1,11 @@
+response_id,participant_group,trust_score,prior_ai_use,ai_knowledge,perceived_accuracy,explanation_clarity,doctor_supervision,age,education
+S001,student,4,yes,4,4,4,5,20,undergraduate
+S002,student,3,yes,3,3,4,4,21,undergraduate
+S003,student,5,yes,5,5,5,5,19,undergraduate
+S004,student,2,no,2,2,2,4,22,undergraduate
+S005,student,4,yes,4,4,3,5,23,undergraduate
+P001,patient,2,no,2,2,3,5,35,secondary
+P002,patient,3,yes,3,3,3,5,46,undergraduate
+P003,patient,2,no,1,2,2,4,57,secondary
+P004,patient,4,yes,4,4,4,5,30,undergraduate
+P005,patient,3,no,2,3,3,5,41,secondary

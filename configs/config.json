@@ -1,0 +1,13 @@
+{
+  "input_path": "data/sample/sample_synthetic.csv",
+  "output_path": "results/benchmark_results.json",
+  "group_column": "participant_group",
+  "primary_metric": "mean_trust_score",
+  "trust_score_min": 1,
+  "trust_score_max": 5,
+  "minimum_completion_rate": 0.9,
+  "maximum_invalid_response_rate": 0.1,
+  "minimum_group_size_for_inference": 30,
+  "alpha": 0.05,
+  "scenario": "smoke_test_only"
+}
