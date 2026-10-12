@@ -8,9 +8,9 @@
 This repository implements a **reproducible survey-data quality and descriptive benchmark**, not a medical recommendation model. It compares the mean self-reported trust score (1–5 Likert scale) for student and patient respondents. The Week 6 data file contains **10 synthetic demonstration responses only**: these are not actual participants and may not be presented as empirical findings. Real anonymized responses are intended for a later data collection stage.
 
 ## Research Questions
-- **RQ1:** What is the level of trust in AI medical recommendations among students and patients? Is there a difference?
-- **RQ2:** How are AI knowledge, perceived accuracy, explanation clarity, and doctor supervision associated with trust?
-- **RQ3:** Is prior AI use associated with higher trust?
+- **RQ1:** Is mean trust different for students and patients?
+- **RQ2:** Which factors are associated with trust?
+- **RQ3:** Is previous AI use associated with trust?
 
 **Primary comparison:** student mean trust score minus patient mean trust score. The baseline is the patient group measured using the identical 1–5 scale. The pipeline currently computes descriptive metrics only; statistical inference and covariate adjustment will be added when enough real data exists.
 
