@@ -1,0 +1,6 @@
+# Simple YAML configuration (also readable by the standard-library parser)
+seed: 20261022
+warmup_runs: 20
+measurement_runs: 120
+output: data/raw/test_run.jsonl
+dataset: data/sample/sample_synthetic.csv
