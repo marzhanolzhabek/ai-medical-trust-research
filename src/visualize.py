@@ -1,51 +1,40 @@
-"""Generate accessible, publication-ready benchmark figures."""
+"""Publication-ready survey plots; data are SYNTHETIC demonstrations."""
+import csv
+import random
+import statistics
 from pathlib import Path
-import sys
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import numpy as np
-from process_data import read_measurements, build_summary
+from process_data import analyze, GROUPS
 
-def figures(root):
-    root=Path(root); out=root/'reports/figures';out.mkdir(parents=True,exist_ok=True)
-    summary=build_summary(root)
-    loads=np.array([d['load'] for d in summary])
-    med=np.array([d['median_us_per_calculation'] for d in summary])
-    low=np.array([d['ci95_low_us_per_calculation'] for d in summary])
-    high=np.array([d['ci95_high_us_per_calculation'] for d in summary])
-    plt.rcParams.update({'font.size':10,'figure.dpi':130,'axes.spines.top':False,'axes.spines.right':False})
-    fig,ax=plt.subplots(figsize=(7.3,4.6))
-    ax.errorbar(loads,med,yerr=[med-low,high-med],fmt='o-',color='#0072B2',ecolor='#333333',capsize=5,lw=2,markersize=7,label='Median and 95% bootstrap CI')
-    ax.set_xlabel('In-memory calculations per timed measurement (count)')
-    ax.set_ylabel('Latency per calculation (microseconds)')
-    ax.set_title('Survey calculation latency versus batch size')
-    ax.set_xticks(loads);ax.grid(axis='y',alpha=.25)
-    ax.legend(frameon=False,loc='best')
-    fig.tight_layout()
-    for ext in ('png','pdf'):fig.savefig(out/f'fig1_latency_vs_load.{ext}',dpi=320)
-    plt.close(fig)
-    selected=(1,50); data=[]
-    for load in selected:
-        a=read_measurements(root/f'data/raw/load_{load}.jsonl')
-        data.append([float(r['latency_us'])/load for r in a if r['status']=='ok' and not r.get('warmup',False)])
-    fig,ax=plt.subplots(figsize=(7.3,4.6))
-    bp=ax.boxplot(data,tick_labels=['Baseline: 1 calculation','Batch: 50 calculations'],patch_artist=True,showfliers=True,medianprops={'color':'black','linewidth':2})
-    for patch,color in zip(bp['boxes'],('#0072B2','#E69F00')):
-        patch.set_facecolor(color);patch.set_alpha(.55);patch.set_edgecolor('black')
-    for i,load in enumerate(selected):
-        d=next(x for x in summary if x['load']==load)
-        ax.errorbar(i+1,d['median_us_per_calculation'],yerr=[[d['median_us_per_calculation']-d['ci95_low_us_per_calculation']],[d['ci95_high_us_per_calculation']-d['median_us_per_calculation']]],fmt='D',color='black',capsize=6,markersize=5,label='Median 95% CI' if i==0 else None)
-    ax.set_ylabel('Latency per calculation (microseconds)')
-    ax.set_xlabel('Measured workload configuration')
-    ax.set_title('Latency distribution: single versus batch workload')
-    ax.legend(frameon=False);ax.grid(axis='y',alpha=.25)
-    fig.tight_layout()
-    for ext in ('png','pdf'):fig.savefig(out/f'fig2_distribution_boxplot.{ext}',dpi=320)
-    plt.close(fig)
-    return summary
+def plot(input_path='data/sample/sample_synthetic.csv',out_dir='reports/figures'):
+    result=analyze(input_path);summ=result['summary'];out=Path(out_dir);out.mkdir(parents=True,exist_ok=True)
+    names=['18–30','31–50','51+'];palette=['#0072B2','#E69F00','#009E73']
+    means=[r['mean_trust'] for r in summ]
+    lower=[r['mean_trust']-r['ci95_lower'] for r in summ]
+    upper=[r['ci95_upper']-r['mean_trust'] for r in summ]
+    fig,ax=plt.subplots(figsize=(8.2,4.7))
+    ax.bar(names,means,color=palette,width=.58)
+    ax.errorbar(names,means,yerr=[lower,upper],fmt='none',ecolor='#222222',capsize=6,lw=1.6)
+    ax.set_ylim(0,5.3);ax.set_xlabel('Patient age group (years)');ax.set_ylabel('Mean trust score (1–5)')
+    ax.set_title('Trust in AI medical recommendations by age group')
+    ax.text(.99,-.20,'Synthetic demonstration data; n=15 per group; error bars: 95% bootstrap CI',transform=ax.transAxes,ha='right',fontsize=8)
+    fig.tight_layout();save(fig,out/'fig1_trust_by_age');plt.close(fig)
+    fig,ax=plt.subplots(figsize=(8.2,4.7))
+    vals=[[int(r['trust_score']) for r in result['valid_rows'] if r['age_group']==g] for g in GROUPS]
+    bp=ax.boxplot(vals,patch_artist=True,tick_labels=names,showmeans=True)
+    for patch,color in zip(bp['boxes'],palette):patch.set_facecolor(color);patch.set_alpha(.65)
+    # 95% bootstrap confidence intervals for group medians, shown as diamond markers.
+    for i, scores in enumerate(vals, start=1):
+        rng=random.Random(42+i); estimates=sorted(statistics.median(rng.choices(scores,k=len(scores))) for _ in range(2000))
+        m=statistics.median(scores);lo=estimates[49];hi=estimates[1949]
+        ax.errorbar(i,m,yerr=[[max(0,m-lo)],[max(0,hi-m)]],fmt='D',color='#202020',
+                    ecolor='#202020',capsize=6,markersize=5,zorder=10)
+    ax.set_ylim(.5,5.5);ax.set_xlabel('Patient age group (years)');ax.set_ylabel('Trust score (1–5)')
+    ax.set_title('Distribution of trust scores across patient age groups')
+    ax.text(.99,-.20,'Synthetic demonstration data; boxes show IQR, whiskers use 1.5×IQR; diamonds: median with 95% bootstrap CI',transform=ax.transAxes,ha='right',fontsize=8)
+    fig.tight_layout();save(fig,out/'fig2_trust_distribution');plt.close(fig)
 
-if __name__=='__main__':
-    root=Path(sys.argv[1]) if len(sys.argv)>1 else Path('.')
-    figures(root)
-    print('Exported two PNG (320 dpi) and two vector PDF figures')
+def save(fig,stem):
+    fig.savefig(str(stem)+'.png',dpi=350,bbox_inches='tight')
+    fig.savefig(str(stem)+'.pdf',bbox_inches='tight')
+if __name__=='__main__':plot()
